@@ -1,5 +1,5 @@
 # Site settings
-title: Klise Theme # site title
+title: tty1538's blog # site title
 description: >- # site description
   He's writing in Bahasa about web technology and experience as a journal 
   for documentation things that he learned, meet him <a href="https://github.com/piharpi" target="_blank" rel="noopener">@github</a>.
@@ -20,7 +20,7 @@ author:
   github: github_username # github username
   twitter: twitter_username # twitter username
   facebook: facebook_username # facebook username
-  email: your-email@email.com # email adress
+  email: tty1538@email.com # email adress
   avatar: /assets/img/avatar.jpg # change with your own avatar
 
 # URL settings
