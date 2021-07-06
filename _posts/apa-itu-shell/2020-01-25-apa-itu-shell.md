@@ -10,7 +10,7 @@ image: "/apa-itu-shell/shell_evolution.png"
 <a href="http://www.youtube.com/watch?v=tc4ROCJYbm0&t=70" target="_blank" rel="noopener">Dulu</a> Sebelum adanya <abbr title="Graphical User Interface">GUI</abbr> cara user berinteraksi dengan komputer menggunakan <abbr title="Command Line Interface">CLI</abbr> yaitu mengetik baris perintah pada sebuah antarmuka dalam bentuk baris teks seperti 👇.
 
 <figure>
-<img src="/apa-itu-shell/terminal_nginx.gif" alt="installing nginx in ubuntu">
+<img src="terminal_nginx.gif" alt="installing nginx in ubuntu">
 <figcaption>Fig 1. Terminal emulator, instalasi package dan check service.</figcaption>
 </figure>
 
@@ -19,7 +19,7 @@ Jika kamu pernah menggunakan unix/linux mungkin pernah menggunakan program diata
 User<sup id="user">[[1]](#user-ref)</sup> tidak bisa secara langsung berkomunikasi dengan sebuah hardware komputer, maka dari itu kita membutuhkan sebuah sistem operasi; **Kernel** adalah program yang merupakan inti utama dari sistem operasi komputer.
 
 <figure>
-<img src="/apa-itu-shell/kernel.png" alt="kernel central of operating system">
+<img src="kernel.png" alt="kernel central of operating system">
 <figcaption>Fig 2. bagan kernel.</figcaption>
 </figure>
 
@@ -28,7 +28,7 @@ Kernel memfasilitasi interaksi antara komponen perangkat keras dan perangkat lun
 Ketika kita menginputkan suatu perintah pada terminal emulator, kernel tidak langsung mengerti perintah yang kita ketik, kita membutuhkan suatu interface sebagai perantara menuju kernel yaitu **Shell**.
 
 <figure>
-<img src="/apa-itu-shell/shell.png" alt="shell">
+<img src="shell.png" alt="shell">
 <figcaption>Fig 3. bagan komunikasi shell.</figcaption>
 </figure>
 
