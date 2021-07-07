@@ -1,4 +1,5 @@
 ---
+layout: post
 title: Todo List
 date: 2021-07-07 14:16:00 +09:00
 categories: [todo]
