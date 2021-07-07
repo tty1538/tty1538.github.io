@@ -7,6 +7,8 @@ description: Analysis of binder_ref
 ---
 
 # binder ref
+---
+binder_ref는 binder_node와 binder_proc을 변수로 갖고 있는 구조체이다. 
 
 ### binder_ref 구조체
 
@@ -69,6 +71,61 @@ print_binder_work_ilocked (m : struct seq_file*,proc : struct binder_proc*,prefi
 
 ### binder_ref의 생성
 
+binder_ref는 binder_write ioctl에서 `BINDER_TYPE_BINDER` cmd 가 왔을 때 생성된다. 
+```c
+		hdr = &object.hdr;
+		off_min = object_offset + object_size;
+		switch (hdr->type) {
+		case BINDER_TYPE_BINDER:
+		case BINDER_TYPE_WEAK_BINDER: {
+			struct flat_binder_object *fp;
+
+			fp = to_flat_binder_object(hdr);
+			ret = binder_translate_binder(fp, t, thread);
+			if (ret < 0) {
+				return_error = BR_FAILED_REPLY;
+				return_error_param = ret;
+				return_error_line = __LINE__;
+				goto err_translate_failed;
+			}
+			binder_alloc_copy_to_buffer(&target_proc->alloc,
+						    t->buffer, object_offset,
+						    fp, sizeof(*fp));
+		} break;
+```
+BINDER_TYPE_BINDER가 올 때 해당 binder translate 과정을 거치게 되는데, 이 때 구조체로 받은 `flat_binder_object`의 binder객체에 맞는 node값을 가지고 온다. 
+```c
+struct flat_binder_object {
+	struct binder_object_header	hdr;
+	__u32				flags;
+
+	/* 8 bytes of data. */
+	union {
+		binder_uintptr_t	binder;	/* local object */
+		__u32			handle;	/* remote object */
+	};
+
+	/* extra data associated with local object */
+	binder_uintptr_t	cookie;
+};
+```
+
+이후에 해당 node값에 해당되는 ref를 증가시켜야 되는데 node에 해당하는 ref가 없다면 해당 node 및 proc에 알맞은 ref를 생성하게 된다. 
+```c
+static int binder_translate_binder(struct flat_binder_object *fp,
+				   struct binder_transaction *t,
+				   struct binder_thread *thread)
+{
+...
+	node = binder_get_node(proc, fp->binder);
+...
+	ret = binder_inc_ref_for_node(target_proc, node,
+			fp->hdr.type == BINDER_TYPE_BINDER,
+			&thread->todo, &rdata);
+
+}
+```
+
 binder_ref가 생성되는 코드는 `binder_inc_ref_for_node` 함수 뿐이다. **kzaloc** 을 통하여 생성된 new_ref는 `binder_get_ref_for_node_olocked`함수를 통하여 적절한 node, proc, 그리고 rbtree와 node의 linked list안으로 연결된다.
 
 ```c
@@ -104,7 +161,7 @@ static int binder_inc_ref_for_node(struct binder_proc *proc,
 	return ret;
 }
 ```
-kzalloc한 후의 `binder_get_ref_for_node_olocked(proc, node, new_ref)` 함수를 살펴보면 다음과 같다. binder_ref의 data.desc는 현재 모든 ref의 desc중 가장 큰 값 + 1 값으로 세팅된다.
+kzalloc한 후의 `binder_get_ref_for_node_olocked(proc, node, new_ref)` 함수를 살펴보면 다음과 같다. binder_ref의 data.desc는 현재 모든 ref의 desc중 가장 큰 값 + 1 값으로 세팅된다. 이에 반해 binder_node 의 ptr값은 내가 원하는 값으로 세팅이 가능하다. 
 
 ```c
 static struct binder_ref *binder_get_ref_for_node_olocked(
@@ -148,8 +205,8 @@ static struct binder_ref *binder_get_ref_for_node_olocked(
 	rb_insert_color(&new_ref->rb_node_node, &proc->refs_by_node);
 
 
-    /* set ref->data.desc */
-    /* we set new_ref's desc will be the biggest desc + 1 */
+	/* set ref->data.desc */
+	/* we set new_ref's desc will be the biggest desc + 1 */
 	new_ref->data.desc = (node == context->binder_context_mgr_node) ? 0 : 1;
 	for (n = rb_first(&proc->refs_by_desc); n != NULL; n = rb_next(n)) {
 		ref = rb_entry(n, struct binder_ref, rb_node_desc);
@@ -187,4 +244,44 @@ static struct binder_ref *binder_get_ref_for_node_olocked(
 }
 ```
 
-이후에 `static int binder_inc_ref_for_node()` 함수가 불리게 되는데 해당 함수의 strong value는 weak handle일 경우가 거의 없는 것 같다. (TodoList 추가됨). 
+이후에 `static int binder_inc_ref_for_node()` 함수가 불리게 되는데 해당 함수의 strong value는 weak handle일 경우가 거의 없는 것 같다. (TodoList 추가됨). 이 후 node->internal_strong_refs 를 증가시키고 함수는 끝난다. 해당 변수는 `BINDER_WORK_NODE` cmd에서 사용되는데 이는 BINDER_NODE연구 때 후에 연구해야 할 것으로 보인다. 
+
+### ref의 의미
+
+binder translation 을 할 때 위에 봤던 `flat_binder_object`를 사용한다.
+```c
+struct flat_binder_object {
+	struct binder_object_header	hdr;
+	__u32				flags;
+
+	/* 8 bytes of data. */
+	union {
+		binder_uintptr_t	binder;	/* local object */
+		__u32			handle;	/* remote object */
+	};
+
+	/* extra data associated with local object */
+	binder_uintptr_t	cookie;
+};
+```
+해당 구조체 중에 union으로 binder 는 local object, handle은 remote object라고 되어 있는데, 코드 상으로 보면 
+
+> binder = node->ptr   
+> handle = ref.data->desc
+
+이다. 우리가 BINDER_TYPE_PTR을 보낼 때 해당 binder값으로 보내면 node가 생성 될 때 bider값이 node->ptr로 들어가게 된다. 
+```c
+static struct binder_node *binder_init_node_ilocked(
+						struct binder_proc *proc,
+						struct binder_node *new_node,
+						struct flat_binder_object *fp)
+{
+	...
+	binder_uintptr_t ptr = fp ? fp->binder : 0;
+	...
+	node->ptr = ptr;
+	...
+}
+
+따라서 내가 어떤 BINDER_TYPE_BINDER 객체로 transaction을 보내면 node->ptr을 내가 정할 수 있다고 볼 수 있다. 하지만, refs값은 무조건 현재의 binder_ref중 가장 큰 값 + 1로 순차적 증가되므로 해당 값이 내가 뭔지 알 수 없음에도 불구하고 BINDER_TYPE_HANDLE에서는 handle값을 입력하도록 정해져 있다. 그렇다면 BINDER_TYPE_HANDLE은 어떤식으로 사용할 수 있는가? 
+
