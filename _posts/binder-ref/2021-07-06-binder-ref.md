@@ -282,6 +282,7 @@ static struct binder_node *binder_init_node_ilocked(
 	node->ptr = ptr;
 	...
 }
+```
 
 따라서 내가 어떤 BINDER_TYPE_BINDER 객체로 transaction을 보내면 node->ptr을 내가 정할 수 있다고 볼 수 있다. 하지만, refs값은 무조건 현재의 binder_ref중 가장 큰 값 + 1로 순차적 증가되므로 해당 값이 내가 뭔지 알 수 없음에도 불구하고 BINDER_TYPE_HANDLE에서는 handle값을 입력하도록 정해져 있다. 그렇다면 BINDER_TYPE_HANDLE은 어떤식으로 사용할 수 있는가? 
 
