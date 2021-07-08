@@ -284,5 +284,87 @@ static struct binder_node *binder_init_node_ilocked(
 }
 ```
 
-따라서 내가 어떤 BINDER_TYPE_BINDER 객체로 transaction을 보내면 node->ptr을 내가 정할 수 있다고 볼 수 있다. 하지만, refs값은 무조건 현재의 binder_ref중 가장 큰 값 + 1로 순차적 증가되므로 해당 값이 내가 뭔지 알 수 없음에도 불구하고 BINDER_TYPE_HANDLE에서는 handle값을 입력하도록 정해져 있다. 그렇다면 BINDER_TYPE_HANDLE은 어떤식으로 사용할 수 있는가? 
+따라서 내가 어떤 BINDER_TYPE_BINDER 객체로 transaction을 보내면 node->ptr을 내가 정할 수 있다고 볼 수 있다. 하지만, refs값은 무조건 현재의 binder_ref중 가장 큰 값 + 1로 순차적 증가되므로 해당 값이 내가 뭔지 알 수 없음에도 불구하고 BINDER_TYPE_HANDLE에서는 handle값을 입력하도록 정해져 있다. 
 
+### android service_manager
+
+원래 기존의 handle은 servicemanager쪽에 전달하는 역할을 하지 않았을까 라고 생각했다.  다음은 servicemanager/binder.c 함수이다. 
+
+```c
+int binder_call(struct binder_state *bs,
+                struct binder_io *msg, struct binder_io *reply,
+                uint32_t target, uint32_t code)
+{
+    int res;
+    struct binder_write_read bwr;
+    struct {
+        uint32_t cmd;
+        struct binder_transaction_data txn;
+    } __attribute__((packed)) writebuf;
+    unsigned readbuf[32];
+    if (msg->flags & BIO_F_OVERFLOW) {
+        fprintf(stderr,"binder: txn buffer overflow\n");
+        goto fail;
+    }
+    writebuf.cmd = BC_TRANSACTION;
+    writebuf.txn.target.handle = target;
+    writebuf.txn.code = code;
+    writebuf.txn.flags = 0;
+```
+
+하지만 pixel5에서 해당 모든 코드가 없어짐
+
+`frameworks/native/cmds/servicemanager/main.cpp`
+```cpp
+int main(int argc, char** argv) {
+	...
+    sp<Looper> looper = Looper::prepare(false /*allowNonCallbacks*/);
+
+    BinderCallback::setupTo(looper);
+    ClientCallbackCallback::setupTo(looper, manager);
+	...
+}
+
+class BinderCallback : public LooperCallback {
+public:
+    static sp<BinderCallback> setupTo(const sp<Looper>& looper) {
+        sp<BinderCallback> cb = new BinderCallback;
+
+...
+    int handleEvent(int /* fd */, int /* events */, void* /* data */) override {
+        IPCThreadState::self()->handlePolledCommands();
+        return 1;  // Continue receiving callbacks.
+    }
+};
+```
+
+`/frameworks/native/libs/binder/IPCThreadState.cpp`
+```cpp
+status_t IPCThreadState::handlePolledCommands()
+{
+    status_t result;
+
+    do {
+        result = getAndExecuteCommand();
+    } while (mIn.dataPosition() < mIn.dataSize());
+
+    processPendingDerefs();
+    flushCommands();
+    return result;
+}
+
+status_t IPCThreadState::getAndExecuteCommand()
+{
+    status_t result;
+    int32_t cmd;
+
+    result = talkWithDriver();
+...
+        result = executeCommand(cmd);
+...
+}
+
+
+```
+
+앞으로 어떤식으로 분석해 나가야 할지는 잘 모르겠음
