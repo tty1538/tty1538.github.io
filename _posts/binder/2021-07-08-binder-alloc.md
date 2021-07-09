@@ -1,6 +1,6 @@
 ---
 title: Binder Alloc Analysis
-date: 2021-07-06 13:14:00 +09:00
+date: 2021-07-09 19:39:00 +09:00
 categories: [binder, linux kernel]
 tags: [binder_alloc, binder]
 description: Analysis of binder_alloc
