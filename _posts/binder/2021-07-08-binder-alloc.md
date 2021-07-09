@@ -10,7 +10,7 @@ description: Analysis of binder_alloc
 
 binder_alloc 구조체는 binder_alloc.c 로 binder.c 와는 다르게 파일이 따로 나와있다.   
 binder_alloc 은 binder deivce에서 각 process의 virtual memory와 physical memory 관리를 담당한다. 저번 분석에서 분석을 대략적으로만 해서 이번에 조금 더 자세히 볼 수 있도록 한다.   
-![binder transaction 구성도](/_posts/binder/android_binder.png)
+![binder transaction 구성도](/binder/android_binder.png)
 
 `binder_alloc 구조체`
 ```c
@@ -109,14 +109,14 @@ struct binder_buffer {
 가상 메모리 관리의 기본 단위는 페이지이며 크기는 일반적으로 4K이지만 일부 플랫폼에서는 최대 64K일 수 있다. 가상 메모리로 작업할 때마다 가상 주소와 물리적 주소의 두 가지 유형의 주소로 작업한다. 모든 CPU 액세스(커널 공간 포함)는 페이지 테이블의 도움으로 MMU에 의해 물리적 주소로 변환되는 가상 주소를 사용한다.
 
 메모리의 물리적 페이지는 PFN(페이지 프레임 번호)으로 식별된다. PFN은 물리적 주소를 페이지 크기로 나누어(또는 PAGE_SHIFT 비트가 있는 물리적 주소를 오른쪽으로 이동하여) 쉽게 계산할 수 있다.
-![paging](./paging.png)
+![paging](/binder/paging.png)
 
 효율성을 위해 가상 주소 공간은 사용자 공간과 커널 공간으로 나뉜다. 같은 이유로 커널 공간에는 가장 낮은 물리적 주소(보통 0)부터 시작하여 물리적 메모리에 연속적으로 매핑되는 lowmem이라는 메모리 매핑 영역이 포함된다. lowmem이 매핑되는 가상 주소는 PAGE_OFFSET에 의해 결정됨.
 
 32비트 시스템에서 사용 가능한 모든 메모리를 lowmem에 매핑할 수 있는 것은 아니므로 커널 공간에 물리적 메모리를 임의로 매핑하는 데 사용할 수 있는 highmem이라는 별도의 영역이 있다.
 
 kmalloc()에 의해 할당된 메모리는 lowmem에 상주하며 물리적으로 연속적임. vmalloc()에 의해 할당된 메모리는 인접하지 않고 lowmem에 상주하지 않음(highmem에 전용 영역이 있음).   
-![kernel-virtmem-map](./kernel-virtmem-map.png)
+![kernel-virtmem-map](/binder/kernel-virtmem-map.png)
 
 
 ### Structures used for memory mapping
