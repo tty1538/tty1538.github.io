@@ -11,8 +11,7 @@ description: Analysis of binder_alloc
 binder_alloc 구조체는 binder_alloc.c 로 binder.c 와는 다르게 파일이 따로 나와있다.   
 binder_alloc 은 binder deivce에서 각 process의 virtual memory와 physical memory 관리를 담당한다. 저번 분석에서 분석을 대략적으로만 해서 이번에 조금 더 자세히 볼 수 있도록 한다.   
 ![binder transaction 구성도](android_binder.png)
-![binder transaction tt](tt.png)
-
+![tt](https://github.com/tty1538/tty1538.github.io/blob/79b46fee780c4255034b0380e3a94cadb3c95702/_posts/binder/android_binder.png)
 `binder_alloc 구조체`
 ```c
 /**
