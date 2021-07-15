@@ -158,6 +158,6 @@ struct flat_binder_object {
 	binder_uintptr_t	cookie;
 };
 ```
-[binder_ref](/_posts/binder/2017-07-06-binder-ref.md) 에서 설명했던 것과 같이 해당 binder값이 `node->ptr`값으로 들어가게 된다. (cookie에 대해서는 나중에 다시 알아봐야 할 것)이외에 다른것들을 설정해주고 끝나게 된다. 
+[binder_ref](https://tty1538.github.io/binder-ref) 에서 설명했던 것과 같이 해당 binder값이 `node->ptr`값으로 들어가게 된다. (cookie에 대해서는 나중에 다시 알아봐야 할 것)이외에 다른것들을 설정해주고 끝나게 된다. 
 
 `binder_new_node`를 부르는 코드는 2경우인데 하나는 context mgr로 servicemanager가 들어가 있기 때문이고, 두 번째는 binder_transalte_bider가 불릴 때이다. 

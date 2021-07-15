@@ -87,8 +87,19 @@ struct binder_buffer {
 5. buffer->user_data = alloc->buffer 를 통해 시작 user address 설정
 6. `list_add(&buffer->entry, &alloc->buffers)` 를 통하여 해당 buffer를 alloc의 linked list와 연결
 7. `binder_insert_free_buffer(alloc, buffer)` 호출
-
-
+    -  해당 함수를 통하여 new_buffer_size를 알아내는데, allocation size가 있는데 왜 이렇게 buffer size를 알아내야 하지? buffer size란 무엇인가.
+    ```c
+    static size_t binder_alloc_buffer_size(struct binder_alloc *alloc,
+                        struct binder_buffer *buffer)
+    {
+    if (list_is_last(&buffer->entry, &alloc->buffers))
+        return alloc->buffer + alloc->buffer_size - buffer->user_data;
+    return binder_buffer_next(buffer)->user_data - buffer->user_data;
+    }    
+    ```
+    -  buffer_size를 매개로 rbtree에 넣게끔 되어있는데 아주 이상. 처음 buffer는 당연히 list end일 거니깐, 그냥 alloc->buffer_size로 간다고 하지만 그 다음부터는 이상
+    - 
+8. d
 
 
 

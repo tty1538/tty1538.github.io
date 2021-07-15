@@ -1,0 +1,287 @@
+;; Added by Package.el.  This must come before configurations of
+;; installed packages.  Don't delete this line.  If you don't want it,
+;; just comment It out by adding a semicolon to the start of the line.
+;; You may delete these explanatory comments.
+(package-initialize)
+
+(setq stack-trace-on-error t)
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(default-input-method "korean-hangul")
+ '(ecb-options-version "2.50")
+ '(package-selected-packages (quote (git-blamed highlight-symbol xcscope zenburn-theme)))
+ '(show-paren-mode t))
+
+(setq ns-command-modifier 'meta)
+
+;---------------------org-mode files-----------------------
+(setq org-log-done 'time)
+(setq org-agenda-files (list "~/org/work.org"))
+
+
+;---------------------semantic mode---------------------
+(semantic-mode)
+
+;;emacs color-theme
+;;sudo apt-get install emacs-goodies
+;;for zenburn
+;;(require 'zenburn-theme)
+(require 'package)
+;;(add-to-list 'package-archives '("marmalade" . "http://marmalade-repo.org/packages/"))
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/"))
+(package-initialize)
+
+;;---------------------tooptip---------------------------
+(require 'package)
+(add-to-list 'package-archives '("melpa" . "http://melpa.milkbox.net/packages/") t)
+(package-initialize)
+(setq url-http-attempt-keepalives nil)
+
+(setq cscope-allow-arrow-overlays nil)
+
+
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+
+(require 'zenburn-theme)
+(global-set-key (kbd "<C-wheel-up>") 'text-scale-increase)
+(global-set-key (kbd "<C-wheel-down>") 'text-scale-decrease)
+
+
+;;---------------------------------------------------------------
+(setq x-alt-keysym 'meta)
+(setq x-super-keysym 'meta)
+(require 'tooltip)
+(tooltip-mode t)
+;;(load-file "/usr/share/emacs/site-lisp/cedet-common/cedet.el")
+(setq-default indent-tabs-mode nil)
+(set-face-attribute 'default nil :height 150)
+(if (fboundp 'scroll-bar-mode) (scroll-bar-mode -1))
+
+(setq stack-trace-on-error t)
+
+
+
+;--------------------------------ggtags-mode----------------------------------------
+(add-hook 'c-mode-common-hook
+          (lambda ()
+            (when (derived-mode-p 'c-mode 'c++-mode 'java-mode)
+              (cscope-minor-mode 1)
+              )))
+
+;use xcscope
+(require 'xcscope)
+(add-hook 'asm-mode-hook (function cscope:hook))
+(add-hook 'java-mode-hook (function cscope:hook))
+(add-hook 'c-mode-hook (function cscope:hook))
+
+
+;; keybindings
+(global-set-key (kbd "<f11>") 'toggle-window-dedicated)
+
+;; buffer dedication (mostly for cscope
+(defun toggle-window-dedicated ()
+  "Toggle whether the current active widow is dedicated"
+  (interactive)
+  (message
+   (if (let (window (get-buffer-window (current-buffer)))
+     (set-window-dedicated-p window
+                 (not (window-dedicated-p window))))
+     "Window '%s' is dedicated"
+     "Window '%s' is normal")
+   (current-buffer)))
+
+;; show line number
+(global-linum-mode 1)
+
+;; move window with shortcuts
+(global-set-key (kbd "C-x <up>") 'windmove-up)
+(global-set-key (kbd "C-x <down>") 'windmove-down)
+(global-set-key (kbd "C-x <right>") 'windmove-right)
+(global-set-key (kbd "C-x <left>") 'windmove-left)
+
+;; use doxymacs
+;;(require 'doxymacs)                     
+;;(add-hook 'c-mode-common-hook 'doxymacs-mode)
+
+;; move {} [] with '%'
+(define-key global-map (kbd "%") 'match-paren)
+(defun match-paren ()
+  "% command of vi"
+  (interactive)
+  (let ((char (char-after (point))))
+    (cond ((memq char '(?\( ?\{ ?\[))
+           (forward-sexp 1)
+           (backward-char 1))
+          ((memq char '(?\) ?\} ?\]))
+           (forward-char 1)
+           (backward-sexp 1))
+          (t (call-interactively 'self-insert-command)))))
+
+;; set tab mode & tab = 8indent
+(add-hook 'c-mode-hook '
+      (lambda ()
+        (c-set-style "linux")
+        (setq default-tab-width 4)
+        (setq c-basic-offset 4) ;; indent use only 2 blank
+        (setq indent-tabs-mode t) ;; no tab
+        ))
+
+;; want to copy & pate in clipboard
+(setq x-select-enable-clipboard t)
+;;(setq interprogram-paste-function 'x-cut-buffer-or-selection-value)
+
+
+(fset 'ie
+   [?\C-x ?1 ?\C-u ?\C-u ?\C-u ?\C-x ?\} ?\C-u ?\C-u ?\C-x ?\{ ?\C-x ?2 ?\C-x ?3 ?\C-x ?o ?\C-x ?o ?\C-x ?3 ?\C-x ?o ?\M-x ?s ?h ?e ?l ?l return f11 ?\C-x up ?\C-x left ?\C-u ?\C-u ?\C-x ?^])
+
+(fset 'initemacs
+   "\C-u\C-u\C-u\C-x}\C-x1")
+
+
+(fset 'find-next-tag "\C-u\256")        ; macro for C-u M-.
+(fset 'find-prev-tag "\C-u-\256")       ; macro for C-u - M-.
+(global-set-key "\M-]" 'find-next-tag)
+(global-set-key "\M-[" 'find-prev-tag)
+
+;;---------------------------ido mode on ---------------------------
+;;ido mode on
+( when (require 'ido "ido" t)
+  (ido-mode 'buffer)
+  (setq ido-enable-flex-matching t)
+  (ido-mode t)
+  )
+
+;;---------------------------new line & indent ---------------------------
+;;newline and indent
+(define-key global-map (kbd "RET") 'newline-and-indent)
+
+
+;;---------------------------set black mode---------------------------
+;;set black-mode
+;; (require 'blank-mode)
+;; (autoload 'blank-mode           "blank-mode" "Toggle blank visualization."        t)
+;; (autoload 'blank-toggle-options "blank-mode" "Toggle local `blank-mode' options." t)
+
+
+;;---------------------------ctags function---------------------------
+;;build ctags
+(defun build-tags (dir-name)
+  "Build TAGS file."
+  (interactive "DDirectory: ")
+  (shell-command
+   (format "ctags -f %s/TAGS -e -R %s" dir-name (directory-file-name dir-name))))
+
+;;please don't be switch buffer
+;;(require 'per-window-point)
+;;(pwp-mode)
+
+
+;;---------------------------Highlight symbol---------------------------
+;;highlight-symbol function
+(load-library "highlight-symbol")
+(require 'highlight-symbol)
+
+(defun hl-symbol-and-jump ()
+  (interactive)
+  (let ((symbol (highlight-symbol-get-symbol)))
+    (unless symbol (error "No symbol at point"))
+    (unless hi-lock-mode (hi-lock-mode 1))
+    (if (member symbol highlight-symbol-list)
+        (highlight-symbol-next)
+      (highlight-symbol-at-point)
+      (highlight-symbol-next))))
+(defun hl-symbol-cleanup ()
+  (interactive)
+  (mapc 'hi-lock-unface-buffer highlight-symbol-list)
+  (setq highlight-symbol-list ()))
+
+
+(global-set-key (kbd "C-<f2>") 'highlight-symbol-at-point)
+(global-set-key (kbd "C-<f3>") 'highlight-symbol-next)
+(global-set-key (kbd "C-<f4>") 'highlight-symbol-prev)
+(global-set-key (kbd "C-<f5>") 'highlight-symbol-list-all)
+(global-set-key (kbd "C-<f6>") 'highlight-symbol-remove-all)
+(global-set-key (kbd "C-*") 'hl-symbol-and-jump)
+(global-set-key (kbd "M-*") 'highlight-symbol-prev)
+(global-set-key (kbd "C-M-*") 'hl-symbol-cleanup)
+
+;;---------------------------show paren mode---------------------------
+;;show-paren-mode
+(show-paren-mode t)
+
+
+;;---------------------------text mate---------------------------
+;; ;;textmate install
+;; (require 'textmate)
+;; (textmate-mode t)
+
+
+;;----------------------------org mode -------------------------------------------------
+;;for org-mode
+(setq load-path (cons "/usr/share/emacs/site-lisp/org-8.2.4/lisp" load-path))
+(setq load-path (cons "/usr/share/emacs/site-lisp/org-8.2.4/contrib/lisp" load-path))
+
+;; The following lines are always needed. Choose your own keys.
+(add-to-list 'auto-mode-alist '("\\.org\\'" . org-mode)) ; not needed since Emacs 22.2
+(add-hook 'org-mode-hook 'turn-on-font-lock) ; not needed when global-font-lock-mode is on
+(global-set-key "\C-cl" 'org-store-link)
+(global-set-key "\C-ca" 'org-agenda)
+(global-set-key "\C-cb" 'org-iswitchb)
+
+
+;;-----------------thingsatpoint--------------------------------
+(load-file "/usr/share/emacs/site-lisp/thingatpt+.el")
+(require 'thingatpt+)
+
+;;occur
+(global-set-key [(f7)]
+               (lambda(query)
+                 (interactive
+                  (list (read-from-minibuffer "occur : " (concat (thing-at-point 'symbol) "") nil nil)))
+                 (occur query)
+                 ))
+(global-set-key [(control f7)] '(lambda() (interactive) (occur (thing-at-point 'symbol))))
+
+
+
+;;-------------------anything----------------------------------------
+;;(require 'anything-startup)
+
+;;--------------------------find-iname-dired--------------------
+(defun find-iname-grep-dired (dir pattern regexp)
+  (interactive
+   "DFind-name (directory): \nsFind-name (filename wildcard): \nsFind-grep (grep regexp): ")
+  (find-dired dir (concat "-iname " (shell-quote-argument pattern) " "
+                          "-type f -exec " grep-program " " find-grep-options " -e "
+                          (shell-quote-argument regexp) " "
+                          (shell-quote-argument "{}") " "
+                          (shell-quote-argument ";"))))
+
+(global-set-key (kbd "C-<f7>") 'find-iname-grep-dired)
+
+
+;--------------------------------------------------------------------------------
+(defun systemjdb()
+  (interactive)
+  (shell-command (format "sh /home/woojin/jdb_env.sh system_server"))
+  (shell-command (format "sleep 1"))
+  (jdb (format "jdb -sourcepath/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/services/core/java:/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/services/backup/java:/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/core/java:/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/services/java -attach localhost:9876")))
+
+;-------------------------------------------------------------------------------------
+
+(defun packageInstallerjdb()
+  (interactive)
+  (shell-command (format "sh /home/woojin/jdb_env.sh com.google.android.packageinstaller"))
+  (shell-command (format "sleep 1"))
+  (jdb (format "jdb -sourcepath/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/services/core/java:/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/core/java:/home/woojin/hdd2/p4v/herovzw/android/frameworks/base/services/java:/home/woojin/hdd2/p4v/herovzw/android/packages/apps/PackageInstaller/src/:/home/woojin/hdd2/p4v/herovzw/android/vendor/samsung/packages/apps/PackageInstaller_M/src/ -attach localhost:9876")))
+;--------------------------------------------------------------------------------------------------
+
+
