@@ -88,7 +88,7 @@ DECIMAL       HEXADECIMAL     DESCRIPTION
 
 해당 이미지를 확인하고 zlib, LZMA로 compressed 된 것을 확인하고 이건 zImage라고 가정하고 압축해제 결과 cpio는 archive만 존재
 
-```zsh
+```console
 tty1538  ~/data/project/binary/xiaomi/12.0.6.0/fastbootrom/apollo_eea_global_images_V12.0.6.0.QJDEUXM_20200926.0000.00_10.0_eea/images/bootimg/_boot.img-zImage.extracted  ls
 158D200  1F5C8  1F5C8.zlib  2260384.cpio  27EF028  27EF028.7z  cpio-root
  tty1538  ~/data/project/binary/xiaomi/12.0.6.0/fastbootrom/apollo_eea_global_images_V12.0.6.0.QJDEUXM_20200926.0000.00_10.0_eea/images/bootimg/_boot.img-zImage.extracted  ls -alR cpio-root
