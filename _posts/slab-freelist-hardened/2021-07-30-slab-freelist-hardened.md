@@ -92,7 +92,7 @@ static inline void *freelist_ptr(const struct kmem_cache *s, void *ptr,
 
 pixel4에서는 enable되어 있지 않은 config였는데, Xiaomi10T 에서는 해당 value가 set되어있다.
 
->arch/arm64/configs/apollo_user_defconfig
+arch/arm64/configs/apollo_user_defconfig
 ```
 CONFIG_EMBEDDED=y
 # CONFIG_SLUB_DEBUG is not set
