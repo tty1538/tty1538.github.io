@@ -7,10 +7,11 @@ description: kernel mitigation for slub poisioning
 ---
 
 # debugging CVE-2020-0423
-특정 폰에서 CVE-2020-0423이 정상적으로 실행되지 않는 문제점이 있음. 
+특정 폰에서 CVE-2020-0423이 정상적으로 실행되지 않는 문제점이 있음. kernel panic이 나면서 계속 재부팅 됨.
 
+---
 ## kernel oops
-문제가 일어나는 경우가 굉장히 다양해서 그 중에 하나만 먼저 분석해보자.   
+문제가 일어나는 경우가 굉장히 다양해서 그 중에 몇 가지를 분석해본다.    
 해당 문제가 일어날 때의 커널 ram-oops는 다음을 참고하자.
 
 ```
@@ -64,10 +65,10 @@ Reading symbols from ./vmlinux...
 266	static inline void *get_freepointer(struct kmem_cache *s, void *object)
 ```
 
-
+---
 ##  CONFIG_SLAB_FREELIST_HARDENED
 
-freelist_ptr안에서는 CONFIG_SLAB_FREELIST_HARDENED일 때는 그냥 단순한 ptr이 아니라 kmem_cache안에 있는 random value와 xor으로 저장되는 것을 알 수 있다.
+freelist_ptr안에서는 CONFIG_SLAB_FREELIST_HARDENED일 때는 그냥 단순한 ptr이 아니라 kmem_cache안에 있는 random value와 xor으로 저장되는 것을 알 수 있다.    
 /mm/slub.c
 ```c
 /********************************************************************
@@ -113,6 +114,58 @@ CONFIG_ARCH_QCOM=y
 4. 하지만 안드로이드에서는 최소 메모리 할당이 128바이트이므로 이 때 하위7개 비트는 0이 될 것이다.
 5. 따라서 해당 포인터를 알 수 있다면 상위 52개비트 + 하위 7개비트 즉 59개의 비트를 알고 있는 상태로 4개 비트의 엔트로피 1/2^4 확률로 해당 주소값을 맞출 수 있으며 만약 페이지 주소정보만을 알아야 한다면 해당 값만으로도 충분히 알아낼 수 있다. 
 
+결국 해당 방법을 쓰기 위해서는 난독화된 포인터를 무조건 알고 있어야 함.
 
-## slub posioning 없이 exploit 진행이 가능할지
+---
+## 자기 자신의 주소를 알 수 있는 방법
+
+### 현재 가지고 있는 것
+1. signalfd를 통한 double free가 일어난 해당 value에 대한 8byte read/write(다만 write는 |0x40100이 되어야만 한다)
+2. Kaslr을 통하여 single_start leak
+
+### 시도해본 것
+1. signalfd를 사용하여 첫 8바이트를 바꿔 자기 자신의 주소를 알 수 있을까?   
+signalfd를 통한 8byte write/read가 가능하므로 double free된 주소에 할당하는 구조체의 첫 번째 멤버가 list_head *head; 가 있다면 8byte read를 통하여 구조체의 첫 주소를 알 수 있다. 즉, obfuscated freelist pointer를 알 수 있다.   
+=> 구조체 맨 첫 번째 멤버가 list_head *head인 것을 찾지 못함.   
+
+![get_my_address_from_signalfd](/assets/img/CVE-2020-0423_signalfd.png)
+
+2. socket활용하여 block후 주소를 읽을 수 있는 방법    
+해당 방법은 sendmsg를 이용하여 address를 leak할 수 있는 방법이 있나 생각해 봄. sendmsg block시킨 이후에 128byte의 어떤 구조체를 할당하는 함수를 호출하고 그 구조체 내에서 list_head가 있어 그것을 recvmsg를 통하여 list_head를 읽을 수 있도록 하면 가능하지 않을까라는 아이디어에서 시작.   
+=> 하지만 sendmsg recvmsg사이의 blocking이 잘 되지 않음.   
+![get_my_address_form_sendmsg](/assets/img/cve-2020-0423_get_my_address_with_sendmsg.png)
+
+3. eventfd로 seq_operation함수 주소를 바꾸는 것이 가능할까?   
+signalfd로는 무조건 0x40100이 or된 상태로 write가 가능하기 때문에 eventfd를 사용하여 해당 함수를 다른 곳으로 점프뛸 수 있도록 바꿀 수 있지 않을까 라는 아이디어   
+=> 아쉽게도 eventfd_ctx에서 바꿀 수 있는 곳은 32 byte offset에 위치한 count인데 seq_operations는 전체가 32바이트 크기라 바꿀 수 있는 곳이 없음
+```
+(gdb) ptype /o struct seq_operations
+/* offset    |  size */  type = struct seq_operations {
+/*    0      |     8 */    void *(*start)(struct seq_file *, loff_t *);
+/*    8      |     8 */    void (*stop)(struct seq_file *, void *);
+/*   16      |     8 */    void *(*next)(struct seq_file *, void *, loff_t *);
+/*   24      |     8 */    int (*show)(struct seq_file *, void *);
+
+                           /* total size (bytes):   32 */
+                         }
+```
+
+```
+(gdb) ptype /o struct eventfd_ctx
+/* offset    |  size */  type = struct eventfd_ctx {
+/*    0      |     4 */    struct kref {
+/*    0      |     4 */        refcount_t refcount;
+
+                               /* total size (bytes):    4 */
+                           } kref;
+/* XXX  4-byte hole  */
+/*    8      |    24 */    wait_queue_head_t wqh;
+/*   32      |     8 */    __u64 count;
+/*   40      |     4 */    unsigned int flags;
+/* XXX  4-byte padding  */
+
+                           /* total size (bytes):   48 */
+                         }
+```
+
 
