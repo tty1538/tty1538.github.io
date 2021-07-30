@@ -68,7 +68,7 @@ Reading symbols from ./vmlinux...
 ##  CONFIG_SLAB_FREELIST_HARDENED
 
 freelist_ptr안에서는 CONFIG_SLAB_FREELIST_HARDENED일 때는 그냥 단순한 ptr이 아니라 kmem_cache안에 있는 random value와 xor으로 저장되는 것을 알 수 있다.
->/mm/slub.c
+/mm/slub.c
 ```c
 /********************************************************************
  * 			Core slab cache functions
