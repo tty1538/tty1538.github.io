@@ -177,7 +177,7 @@ DECIMAL       HEXADECIMAL     DESCRIPTION
 확인 결과 Image는 zImage가 아니다. arm 32비트까지는 zImage가 기본 이미지로 설정되었지만 64비트는 zImage생성을 하지 않고 gzip compressed를 할지 말지만 결정한다.   
 (이상한건 bz가 아니라 그냥 gzip만 한다.)
 
-> arch/arm/Makefile
+arch/arm/Makefile
 ```makefile
 # Default target when executing plain make
 boot := arch/arm/boot
@@ -190,7 +190,7 @@ KBUILD_IMAGE := $(boot)/zImage
 endif
 ```
 
-> arch/arm64/Makefile
+arch/arm64/Makefile
 ```makefile
 ifeq ($(CONFIG_BUILD_ARM64_KERNEL_COMPRESSION_GZIP),y)
 KBUILD_IMAGE   := Image.gz
