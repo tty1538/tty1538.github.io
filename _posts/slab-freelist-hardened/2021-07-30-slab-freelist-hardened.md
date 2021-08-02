@@ -120,22 +120,23 @@ CONFIG_ARCH_QCOM=y
 ## 자기 자신의 주소를 알 수 있는 방법
 
 ### 현재 가지고 있는 것
+
 1. signalfd를 통한 double free가 일어난 해당 value에 대한 8byte read/write(다만 write는 |0x40100이 되어야만 한다)
 2. Kaslr을 통하여 single_start leak
 
 ### 시도해본 것
-1. signalfd를 사용하여 첫 8바이트를 바꿔 자기 자신의 주소를 알 수 있을까?   
+#### signalfd를 사용하여 첫 8바이트를 바꿔 자기 자신의 주소를 알 수 있을까?   
 signalfd를 통한 8byte write/read가 가능하므로 double free된 주소에 할당하는 구조체의 첫 번째 멤버가 list_head *head; 가 있다면 8byte read를 통하여 구조체의 첫 주소를 알 수 있다. 즉, obfuscated freelist pointer를 알 수 있다.   
 => 구조체 맨 첫 번째 멤버가 list_head *head인 것을 찾지 못함.   
 
 ![get_my_address_from_signalfd](/assets/img/CVE-2020-0423_signalfd.png)
 
-2. socket활용하여 block후 주소를 읽을 수 있는 방법    
+#### socket활용하여 block후 주소를 읽을 수 있는 방법    
 해당 방법은 sendmsg를 이용하여 address를 leak할 수 있는 방법이 있나 생각해 봄. sendmsg block시킨 이후에 128byte의 어떤 구조체를 할당하는 함수를 호출하고 그 구조체 내에서 list_head가 있어 그것을 recvmsg를 통하여 list_head를 읽을 수 있도록 하면 가능하지 않을까라는 아이디어에서 시작.   
 => 하지만 sendmsg recvmsg사이의 blocking이 잘 되지 않음.   
 ![get_my_address_form_sendmsg](/assets/img/cve-2020-0423_get_my_address_with_sendmsg.png)
 
-3. eventfd로 seq_operation함수 주소를 바꾸는 것이 가능할까?   
+#### eventfd로 seq_operation함수 주소를 바꾸는 것이 가능할까?   
 signalfd로는 무조건 0x40100이 or된 상태로 write가 가능하기 때문에 eventfd를 사용하여 해당 함수를 다른 곳으로 점프뛸 수 있도록 바꿀 수 있지 않을까 라는 아이디어   
 => 아쉽게도 eventfd_ctx에서 바꿀 수 있는 곳은 32 byte offset에 위치한 count인데 seq_operations는 전체가 32바이트 크기라 바꿀 수 있는 곳이 없음
 ```
