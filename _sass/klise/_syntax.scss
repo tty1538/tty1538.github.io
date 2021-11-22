@@ -31,11 +31,13 @@ pre.highlight, pre {
   background-color: #1a1b21;
   border-radius: 2px;
   padding: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
   display: block;
   overflow-x: auto;
 
   > code {
-    width: 80%;
+    width: 100%;
     max-width: 50rem;
     margin-left: 0;
     margin-right: 0;
