@@ -6,7 +6,7 @@ tags: [kernel build system, kgdb]
 description: How to use kgdb in AVD kernel
 ---
 
-# 준비사항
+# 1. 준비사항
 
 필요한 디펜던시 모듈들과 repo 다운로드
 ```sh
@@ -31,7 +31,7 @@ sudo wget https://storage.googleapis.com/git-repo-downloads/repo -O /usr/bin/rep
 sudo chmod a+x /usr/bin/repo
 ```
 
-# 1. Up to Android 10
+# 2. Up to Android 10
 
 안드로이드 10까지의 커널은 기본적으로 커널 빌드만 해도 사용이 가능하다. 다른 ko파일들이 빌드하면서 따로 나오는 것들이 없어서 커널만 바꿔쳐도 사용이 가능함.
 다만, kgdb를 사용하기 위한 커널 config만 설정해주면 된다.
@@ -71,11 +71,11 @@ emulator -verbose -show-kernel -debug init -avd test -kernel /home/tty1538/proje
 | p $container_of(init_task.tasks.next, "struct task_struct", "tasks") | Can print using container_of kernel macro |
 | p/x $lx_thread_info($lx_task_by_pid(1))                              | Using thread info macro for task struct   |
 
-# 2. Android11, 12
+# 3. Android11, 12
 
 안드로이드 11부터 적용된 [GKI](https://source.android.google.cn/devices/architecture/kernel/generic-kernel-image?hl=ko)는 커널은 기본적으로 리눅스 커널을 쓰고 나머지 벤더에 관련된 파일들은 모듈로 모아 ko파일로 생성된다. 생성된 커널의 bzImage와 나머지 ko파일들은 버전을 확인하여 맞지 않는 버전일 시 제대로 로드되지 않는다. 따라서 커널과 짝이 맞는 ko모듈을 넣어야지만 정상적으로 부팅시킬 수 있다.
 
-## 2.1. 커널만 빌드하기
+## 3.1. 커널만 빌드하기
 [참고 사이트](https://forum.xda-developers.com/t/guide-build-mod-update-kernel-ranchu-goldfish-5-4-5-10-gki-ramdisk-img-modules-rootavd-android-11-r-12-s-avd-google-play-store-api.4220697/)
 
 커널만 빌드하기 위해서는 ko와 짝을 맞추어야 하므로 기존의 커널 버전을 알아야만 한다. Android Studio (리눅스의 경우 ~/android-studio/bin/studio.sh) 를 실행시켜 필요한 Android12/11 image 및 tools등을 다운로드 받는다.
@@ -94,7 +94,7 @@ emulator -avd Pixel_5_API_31 -show-kernel -verbose -debug init
 [    0.000000] Linux version 5.4.61-android11-2-00064-g4271ad6e8ade-ab6991359 (build-user@build-host) (Android (6443078 based on r383902) clang version 11.0.1 (https://android.googlesource.com/toolchain/llvm-project b397f81060ce6d701042b782172ed13bee898b79), LLD 11.0.1 (/buildbot/tmp/tmp6_m7QH b397f81060ce6d701042b782172ed13bee898b79)) #1 SMP PREEMPT Mon Nov 23 17:45:44 UTC 2020
 ```
 
-생성되는 로그에서 커널 버전이 나오게 되는데, 그 내용은 다음과 같다.
+생성되는 로그에서 커널 버전이 나오게 되는데, 그 내용은 다음과 같다.  
 | Value                                                    | Meaning                                                                                          |
 |----------------------------------------------------------|--------------------------------------------------------------------------------------------------|
 | Linux version 5.4.61​                                    | Kernel VERSION.PATCHLEVEL.SUBLEVEL​                                                              |
@@ -107,7 +107,7 @@ emulator -avd Pixel_5_API_31 -show-kernel -verbose -debug init
 
 이 때 중요한것은 android11-2, Local Version String 및 Clang Version이다. 해당 버전에 맞는 커널 빌드를 시도해 볼 것이다.
 
-### 2.1.1. 커널 버전 맞추기
+### 3.1.1. 커널 버전 맞추기
 
 일단 커널에 관련된 많은 파일들을 넣어야 하니 적당한 폴더를 하나 생성하자.
 ```sh
@@ -145,7 +145,7 @@ git clone \
 
 이제 커널 다운로드 준비가 완료되었다.
 
-### 2.1.2. 커널 config 복사 및 빌드하기
+### 3.1.2. 커널 config 복사 및 빌드하기
 
 아까의 emulator config를 가져오자. 빌드 할 때 해당 config로 빌드 할 예정이다.
 
@@ -202,12 +202,12 @@ bear make $DEVEXPS -j$(nproc)
 이 후 emulator 구동 시에 -kernel 옵션을 줘서 새로 빌드한 커널로 부팅하게끔 하면 끝!
 해당 커널을 system-images안의 kernel-ranchu로 변경시키면 따로 kernel옵션을 안줘도 되긴 하지만, 부팅이 안되면 매우 속상하니 웬만하면 -kernel옵션을 주고 실행시키자.
 
-## ko모듈을 포함하여 빌드해서 넣기
+## 3.2. ko모듈을 포함하여 빌드해서 넣기
 
-### 준비사항
+### 3.2.1. 준비사항
 [rootAVD](https://github.com/newbit1/rootAVD) 를 다운로드 하여 준비한다.
 
-### 빌드 과정
+### 3.2.2. 빌드 과정
 virtual mahcine에서 돌아가는 커널은 예전 goldfish와는 다르게 common에 커널이 들어있고 common-modules에 virtual machine관련된 device driver가 들어있다.(goldfish 포함)  
 android repo 에서 manifest별로 한번에 다운로드 받으면 되는데 이는 다음과 같다. 이번 예제에서는 5.10커널 기준으로 설명한다.
 
