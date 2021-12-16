@@ -272,5 +272,5 @@ emulator -avd Pixel_5_API_31 -show-kernel -verbose -debug init -qemu -s
 emulator -avd Pixel_5_API_31 -show-kernel -verbose -debug init -qemu -s -kernel /home/tty1538/data/project/AVD-kernel-common-android12-5.10-lts/out/android12-5.10/dist/bzImage
 ```
 
-이후 빌드된 vmlinux로 target remote:1234로 gdb접속시 kgdb가 정상적으로 실행됨을 확인할 수 있다.
-![kgdb_android12]/assets/img/2021-12-14-Android_AVDKernel_debugging_with_kgdb/kgdb_android12.png)
+이후 빌드된 vmlinux로 target remote:1234로 gdb접속시 kgdb가 정상적으로 실행됨을 확인할 수 있다.  
+![kgdb_android12](/assets/img/2021-12-14-Android_AVDKernel_debugging_with_kgdb/kgdb_android12.png)
