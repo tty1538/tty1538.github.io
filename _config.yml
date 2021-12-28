@@ -71,7 +71,7 @@ include:
 
 exclude:
   - CNAME
-#  - Gemfile
+  - Gemfile
   - Gemfile.lock
   - LICENSE
   - CHANGELOG.md
