@@ -1,5 +1,5 @@
 #+TITLE: My Emacs Settings
-#+DATE: 2021-12-27 09:00:00 +09:00
+#+DATE: 2021-12-28 09:00:00 +09:00
 #+CATEGORIES: [linux emacs]
 #+TAGS: [emacs editor]
 #+description: My New Settings For Emacs
