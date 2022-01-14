@@ -45,8 +45,8 @@ static int binderfs_binder_ctl_create(struct super_block *sb)
 하나는 binder_device자체를 만드는 곳이고, 하나는 binder_control을 만드는 곳이다. binder-control은 binderfs에 있는 ioctl file이며 이를 통하여 binder_device를 생성할 수 있는 파일이다. binder-control은 각 mount마다 하나씩 밖에 존재하지 않는다. 
 
 binderfs_binder_device_create는 두 가지 조건에서 쓰인다.
-1. binderfs_fill_super 함수에서 불리는데 fill super는 superblock을 채우는 함수이며, mount할 때 처음 불린다. 이 때 binderfs/binder, binderfs/hwbinder, binderfs/vndbinder의 세 개 파일을 만든다.
 
+1. binderfs_fill_super 함수에서 불리는데 fill super는 superblock을 채우는 함수이며, mount할 때 처음 불린다. 이 때 binderfs/binder, binderfs/hwbinder, binderfs/vndbinder의 세 개 파일을 만든다.
 2. binder_ctl_ioctl에서 불리며, 이는 BINDER_CTL_ADD ioctl을 통해 추가가 가능하다. 하지만 binderfs문서에서 봤다 싶이, binder-control node는 root권한으로만 rw가 가능하므로 실제로 우리가 쓸 수 있는 부분은 없다.
 
 ## binder.c에서의 binder_device
@@ -326,21 +326,6 @@ static void binderfs_evict_inode(struct inode *inode)
 }
 ```
 
-저 앞의 S_ISCHR에 걸려서 그냥 return 되어버림. 그 이유는 binder-control/ binder-control ioctl을 통하여 만드는 binder_device객체들은 모두 S_IFCHR로 special node를 만들기 때문이다. 의도한것으로 보이긴 하지만 뭔가 아주 엉성한 코드다. 결론적으로는 모두 잘 작동하네.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+저 앞의 S_ISCHR에 걸려서 그냥 return 되어버림. 그 이유는 binder-control/ binder-control ioctl을 통하여 만드는 binder_device객체들은 모두 S_IFCHR로 special node를 만들기 때문이다. 의도한것으로 보이긴 하지만 뭔가 아주 엉성한 코드다. 결론적으로는 모두 잘 작동하네. 앞으로 뭘 더 볼건지 확인은 좀 해봐야할듯;
 
 
